@@ -1,7 +1,7 @@
 {
   "info": {
-    "name": "Employee Task Tracker API",
-    "description": "Node.js + Express + MySQL backend. Set the {{baseUrl}} variable (default http://localhost:5000). The login/register requests auto-save the returned JWT to {{token}}, which every protected request uses.",
+    "name": "TeamPulse API",
+    "description": "Node.js + Express + MySQL backend for TeamPulse — Employee Task & Team Productivity Platform. Set the {{baseUrl}} variable (default http://localhost:5000). The login/register requests auto-save the returned JWT to {{token}}, which every protected request uses.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -46,7 +46,7 @@
             "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"admin@demo.com\",\n  \"password\": \"password123\"\n}"
+              "raw": "{\n  \"email\": \"dev@gmail.com\",\n  \"password\": \"password123\"\n}"
             }
           },
           "event": [

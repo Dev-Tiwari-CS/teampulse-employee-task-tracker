@@ -8,14 +8,13 @@ import { taskApi } from '../api/endpoints';
 
 const PAGE_SIZE = 8;
 
-// The forward progression an employee can move a task through.
 const NEXT_STATUS = {
-  pending: 'in_progress',
+  pending:     'in_progress',
   in_progress: 'completed',
-  completed: null,
+  completed:   null,
 };
 const NEXT_LABEL = {
-  pending: 'Start',
+  pending:     'Start task',
   in_progress: 'Mark complete',
 };
 
@@ -35,7 +34,6 @@ export default function EmployeeDashboard() {
     setLoading(true);
     setError('');
     try {
-      // GET /tasks already scopes employees to their own tasks server-side.
       const res = await taskApi.list({
         status: statusFilter,
         sortBy: 'due_date',
@@ -52,23 +50,15 @@ export default function EmployeeDashboard() {
     }
   }, [statusFilter, page]);
 
-  useEffect(() => {
-    setPage(1);
-  }, [statusFilter]);
+  useEffect(() => { setPage(1); }, [statusFilter]);
+  useEffect(() => { load(); }, [load]);
 
-  useEffect(() => {
-    load();
-  }, [load]);
-
-  const counts = useMemo(() => {
-    return tasks.reduce(
-      (acc, t) => {
-        acc[t.status] = (acc[t.status] || 0) + 1;
-        return acc;
-      },
+  const counts = useMemo(() =>
+    tasks.reduce(
+      (acc, t) => { acc[t.status] = (acc[t.status] || 0) + 1; return acc; },
       { pending: 0, in_progress: 0, completed: 0 }
-    );
-  }, [tasks]);
+    ), [tasks]
+  );
 
   async function advance(task) {
     const next = NEXT_STATUS[task.status];
@@ -76,7 +66,7 @@ export default function EmployeeDashboard() {
     setUpdatingId(task.id);
     try {
       await taskApi.update(task.id, { status: next });
-      push(`Moved "${task.title}" to ${next.replace('_', ' ')}`);
+      push(`"${task.title}" moved to ${next.replace('_', ' ')}`);
       load();
     } catch (err) {
       push(err.message, 'error');
@@ -85,6 +75,8 @@ export default function EmployeeDashboard() {
     }
   }
 
+  const firstName = user?.name?.split(' ')[0] ?? 'there';
+
   return (
     <>
       <Navbar />
@@ -92,57 +84,84 @@ export default function EmployeeDashboard() {
         <header className="page-head">
           <div>
             <h1>My Tasks</h1>
-            <p className="lede">Hi {user?.name?.split(' ')[0]} — here's what's on your plate.</p>
+            <p className="lede">Hi {firstName} — here's everything on your plate.</p>
           </div>
         </header>
 
-        {error && <div className="error-banner">{error}</div>}
+        {error && (
+          <div className="error-banner" role="alert">
+            <span aria-hidden="true">⚠</span> {error}
+          </div>
+        )}
 
-        <div className="stats">
+        {/* Stat tiles */}
+        <div className="stats" role="region" aria-label="Task summary">
           <div className="card stat">
-            <div className="n">{total}</div>
-            <div className="l">Assigned to me</div>
-            <div className="bar"><i style={{ width: '100%' }} /></div>
+            <div className="stat-value">{total}</div>
+            <div className="stat-label">Assigned to me</div>
+            <div className="stat-bar"><span className="stat-bar-fill" style={{ width: '100%' }} /></div>
           </div>
           <div className="card stat">
-            <div className="n">{counts.pending}</div>
-            <div className="l">Pending (this page)</div>
-            <div className="bar"><i style={{ width: '50%' }} /></div>
+            <div className="stat-value">{counts.pending}</div>
+            <div className="stat-label">Pending <span className="muted">(this page)</span></div>
+            <div className="stat-bar">
+              <span className="stat-bar-fill" style={{ width: tasks.length ? `${Math.round((counts.pending/tasks.length)*100)}%` : '0%' }} />
+            </div>
           </div>
           <div className="card stat">
-            <div className="n">{counts.in_progress}</div>
-            <div className="l">In progress (this page)</div>
-            <div className="bar"><i style={{ width: '70%' }} /></div>
+            <div className="stat-value">{counts.in_progress}</div>
+            <div className="stat-label">In progress <span className="muted">(this page)</span></div>
+            <div className="stat-bar">
+              <span className="stat-bar-fill" style={{ width: tasks.length ? `${Math.round((counts.in_progress/tasks.length)*100)}%` : '0%' }} />
+            </div>
           </div>
           <div className="card stat">
-            <div className="n">{counts.completed}</div>
-            <div className="l">Completed (this page)</div>
-            <div className="bar"><i style={{ width: '100%' }} /></div>
+            <div className="stat-value">{counts.completed}</div>
+            <div className="stat-label">Completed <span className="muted">(this page)</span></div>
+            <div className="stat-bar">
+              <span className="stat-bar-fill" style={{ width: tasks.length ? `${Math.round((counts.completed/tasks.length)*100)}%` : '0%' }} />
+            </div>
           </div>
         </div>
 
+        {/* Task list */}
         <div className="card card-pad">
-          <div className="section-title">Task list</div>
+          <div className="section-label">Task list</div>
+
           <div className="filters">
             <div className="field">
-              <label>Status</label>
-              <select className="select" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+              <label htmlFor="filter-status">Filter by status</label>
+              <select
+                id="filter-status"
+                className="select"
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+              >
                 <option value="">All statuses</option>
                 <option value="pending">Pending</option>
                 <option value="in_progress">In Progress</option>
                 <option value="completed">Completed</option>
               </select>
             </div>
+            {statusFilter && (
+              <button
+                className="btn btn-sm"
+                onClick={() => setStatusFilter('')}
+                aria-label="Clear status filter"
+              >
+                Clear filter
+              </button>
+            )}
           </div>
 
           <div className="table-wrap">
-            <table className="tasks">
+            <table className="tasks" aria-label="My tasks">
               <thead>
                 <tr>
-                  <th>Task</th>
-                  <th>Status</th>
-                  <th>Due date</th>
-                  <th className="right">Update</th>
+                  <th scope="col">Task</th>
+                  <th scope="col">Status</th>
+                  <th scope="col">Due date</th>
+                  <th scope="col" className="right">Action</th>
                 </tr>
               </thead>
               <tbody>
@@ -150,7 +169,8 @@ export default function EmployeeDashboard() {
                   <tr>
                     <td colSpan={4}>
                       <div className="center-screen" style={{ height: 120 }}>
-                        <span className="spinner" /> Loading…
+                        <span className="spinner" aria-hidden="true" />
+                        <span>Loading tasks…</span>
                       </div>
                     </td>
                   </tr>
@@ -158,8 +178,11 @@ export default function EmployeeDashboard() {
                   <tr>
                     <td colSpan={4}>
                       <div className="empty">
-                        <div className="big">Nothing here</div>
-                        <div>You have no tasks matching this filter.</div>
+                        <div className="empty-icon" aria-hidden="true">✅</div>
+                        <div className="empty-title">Nothing here</div>
+                        <div className="empty-sub">
+                          {statusFilter ? 'No tasks match this filter.' : 'No tasks have been assigned to you yet.'}
+                        </div>
                       </div>
                     </td>
                   </tr>
@@ -170,7 +193,9 @@ export default function EmployeeDashboard() {
                       <tr key={t.id}>
                         <td>
                           <div className="task-title">{t.title}</div>
-                          {t.description && <div className="task-desc">{t.description}</div>}
+                          {t.description && (
+                            <div className="task-desc">{t.description}</div>
+                          )}
                         </td>
                         <td><StatusBadge status={t.status} /></td>
                         <td>{t.due_date || <span className="muted">—</span>}</td>
@@ -180,11 +205,15 @@ export default function EmployeeDashboard() {
                               className="btn btn-sm btn-primary"
                               disabled={updatingId === t.id}
                               onClick={() => advance(t)}
+                              aria-label={`${NEXT_LABEL[t.status]}: ${t.title}`}
                             >
-                              {updatingId === t.id ? '…' : NEXT_LABEL[t.status]}
+                              {updatingId === t.id
+                                ? <><span className="spinner" style={{ width: 14, height: 14, borderWidth: 2 }} /> Updating…</>
+                                : NEXT_LABEL[t.status]
+                              }
                             </button>
                           ) : (
-                            <span className="muted">Done ✓</span>
+                            <span className="muted" aria-label="Task complete">Done ✓</span>
                           )}
                         </td>
                       </tr>

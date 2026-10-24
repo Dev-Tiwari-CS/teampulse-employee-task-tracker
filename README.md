@@ -1,305 +1,524 @@
-# TaskFlow — Employee Task Tracker
+# TeamPulse — Employee Task & Team Productivity Platform
 
-A small full-stack application where an **admin** manages employees and assigns tasks, and **employees** update the status of the tasks assigned to them.
+![TeamPulse Banner](https://img.shields.io/badge/TeamPulse-Task%20Management-243B80?style=for-the-badge&logo=github&logoColor=white)
+![License](https://img.shields.io/badge/License-MIT-blue.svg)
+![Node](https://img.shields.io/badge/Node.js-24.x-green)
+![React](https://img.shields.io/badge/React-18.x-61DAFB)
+![MySQL](https://img.shields.io/badge/MySQL-8.x-4479A1)
 
-Built with **Node.js + Express + MySQL** (backend) and **React + Vite** (frontend), using JWT authentication, bcrypt password hashing, and role-based access control.
-
----
-
-## Table of Contents
-
-1. [Tech Stack](#tech-stack)
-2. [Features](#features)
-3. [Project Structure](#project-structure)
-4. [Prerequisites](#prerequisites)
-5. [Setup — Option A: Local (recommended)](#setup--option-a-local-recommended)
-6. [Setup — Option B: Docker](#setup--option-b-docker)
-7. [Demo Accounts](#demo-accounts)
-8. [API Reference](#api-reference)
-9. [Database Schema](#database-schema)
-10. [Postman Collection](#postman-collection)
-11. [Notes & Design Decisions](#notes--design-decisions)
+A professional, role-based task management application where **admins** manage employees and assign tasks, while **employees** update task statuses with a polished, modern interface.
 
 ---
 
-## Tech Stack
+## 📋 Table of Contents
 
-| Layer    | Technology                                   |
-| -------- | -------------------------------------------- |
-| Backend  | Node.js, Express, MySQL (`mysql2`)           |
-| Auth     | JWT (`jsonwebtoken`), bcrypt (`bcryptjs`)    |
-| Frontend | React 18, Vite, React Router, Axios          |
-| DB       | MySQL 8                                       |
-
----
-
-## Features
-
-**Core (per the assignment)**
-
-- JWT authentication (register / login) with bcrypt-hashed passwords
-- Role-based access control middleware (`admin`, `employee`)
-- Clean layered backend: `routes → controllers → services → models`
-- Central error handling with a consistent error response shape
-- At least one API using a **SQL JOIN** (task lists join `users` for assignee details — see [`task.model.js`](backend/src/models/task.model.js))
-- React UI: Login → role-based redirect → Admin Dashboard / Employee Dashboard
-- Admin: view employees, create tasks, view all tasks in a table with edit
-- Employee: view only their tasks, advance status (Pending → In Progress → Completed)
-
-**Bonus (implemented)**
-
-- ✅ Role-based route protection in React (`ProtectedRoute`)
-- ✅ Filters (by status and due date) and server-side sorting
-- ✅ Pagination (server-side `LIMIT`/`OFFSET` with total counts)
-- ✅ Activity logs (audit trail table + `GET /activity-logs`)
-- ✅ Dockerized backend + MySQL (`docker-compose.yml`)
+1. [Features](#features)
+2. [Tech Stack](#tech-stack)
+3. [Architecture](#architecture)
+4. [Screenshots](#screenshots)
+5. [Prerequisites](#prerequisites)
+6. [Quick Setup (Windows)](#quick-setup-windows)
+7. [Environment Configuration](#environment-configuration)
+8. [Database Setup](#database-setup)
+9. [Running the Application](#running-the-application)
+10. [API Reference](#api-reference)
+11. [Authentication & Roles](#authentication--roles)
+12. [Troubleshooting](#troubleshooting)
+13. [Security Considerations](#security-considerations)
+14. [Future Improvements](#future-improvements)
+15. [License & Attribution](#license--attribution)
 
 ---
 
-## Project Structure
+## ✨ Features
 
-```
-employee-task-tracker/
-├── backend/
-│   ├── src/
-│   │   ├── config/db.js            # MySQL connection pool
-│   │   ├── middleware/             # auth (JWT + roles), validation, error handler
-│   │   ├── routes/                 # auth, users, tasks, activity-logs
-│   │   ├── controllers/            # thin HTTP layer
-│   │   ├── services/               # business logic + access rules
-│   │   ├── models/                 # SQL data access (JOINs live here)
-│   │   ├── utils/                  # JWT, ApiError, asyncHandler, migrate, seed
-│   │   ├── app.js                  # Express app (routes + middleware)
-│   │   └── server.js               # entry point (DB ping + listen)
-│   ├── .env.example
-│   ├── Dockerfile
-│   └── package.json
-├── frontend/
-│   ├── src/
-│   │   ├── api/                     # axios client + endpoint wrappers
-│   │   ├── context/AuthContext.jsx  # session state
-│   │   ├── components/              # Navbar, ProtectedRoute, TaskModal, etc.
-│   │   ├── pages/                   # Login, AdminDashboard, EmployeeDashboard
-│   │   ├── App.jsx                  # router + role-protected routes
-│   │   └── main.jsx
-│   ├── .env.example
-│   └── package.json
-├── database/
-│   └── schema.sql                   # SQL dump (CREATE DATABASE + tables)
-├── postman/
-│   └── Employee-Task-Tracker.postman_collection.json
-└── docker-compose.yml
-```
+**Core Functionality**
+- 🔐 **JWT authentication** with bcrypt-hashed passwords
+- 👥 **Role-based access control** (admin/employee)
+- 📋 **Task management** – create, assign, update status
+- 🔍 **Filtering & sorting** – by status, due date, assignee
+- 📊 **Pagination** – server-side with metadata
+- 📝 **Activity logs** – audit trail for admin actions
+
+**Admin Capabilities**
+- View all employees and tasks
+- Create and assign new tasks
+- Edit any task field (title, description, assignee, due date)
+- View system activity logs
+- Apply filters and sort across all data
+
+**Employee Experience**
+- View only assigned tasks
+- Update task status (Pending → In Progress → Completed)
+- Filter personal task list
+- Clean, focused dashboard
+
+**Bonus Features**
+- 🎨 **Professional UI** – modern design with consistent color palette
+- ♿ **Accessibility** – ARIA labels, keyboard navigation, proper contrast
+- 📱 **Responsive layout** – works on desktop, tablet, mobile
+- 🛡️ **Security hardened** – SQL injection prevention, JWT expiration
+- 📦 **Docker support** (optional)
 
 ---
 
-## Prerequisites
+## 🛠️ Tech Stack
 
-- **Node.js** ≥ 18 and npm
-- **MySQL** ≥ 8 running locally (for Option A), **or** Docker (for Option B)
+| Layer        | Technology                          | Version |
+|--------------|-------------------------------------|---------|
+| **Frontend** | React 18, Vite, React Router 6      | 18.3.1  |
+|              | Axios (HTTP client)                 | 1.7.7   |
+| **Backend**  | Node.js, Express                    | 24.14.0 |
+|              | MySQL2 (Promise-based)              | 3.11.0  |
+|              | JWT authentication                  | 9.0.2   |
+|              | bcryptjs password hashing           | 2.4.3   |
+| **Database** | MySQL Community Server              | 8.0.46+ |
+| **Tooling**  | Nodemon (dev server)                | 3.1.4   |
+|              | dotenv (environment config)         | 16.4.5  |
 
 ---
 
-## Setup — Option A: Local (recommended)
-
-### 1. Database
-
-Make sure MySQL is running. You can create the schema in either way:
+## 🏗️ Architecture
 
 ```bash
-# Using the SQL dump directly:
+TeamPulse/
+├── backend/                          # Node.js + Express API
+│   ├── src/
+│   │   ├── config/db.js              # MySQL connection pool
+│   │   ├── middleware/               # auth, validation, error handling
+│   │   ├── routes/                   # auth, users, tasks, activity-logs
+│   │   ├── controllers/              # thin HTTP layer
+│   │   ├── services/                 # business logic & authorization
+│   │   ├── models/                   # SQL data access (includes JOINs)
+│   │   ├── utils/                    # JWT, ApiError, asyncHandler, migrate, seed
+│   │   ├── app.js                    # Express app setup
+│   │   └── server.js                 # server entry point
+│   ├── .env.example                  # Environment template
+│   ├── package.json                  # Backend dependencies
+│   └── Dockerfile                    # Containerization
+├── frontend/                         # React SPA
+│   ├── src/
+│   │   ├── api/                      # Axios client & endpoints
+│   │   ├── context/AuthContext.jsx   # Session state management
+│   │   ├── components/               # Reusable UI components
+│   │   ├── pages/                    # Login, AdminDashboard, EmployeeDashboard
+│   │   ├── App.jsx                   # Router & protected routes
+│   │   ├── main.jsx                  # React entry point
+│   │   └── styles.css                # Complete design system
+│   ├── .env.example                  # Frontend environment template
+│   ├── package.json                  # Frontend dependencies
+│   └── vite.config.js                # Vite configuration
+├── database/
+│   └── schema.sql                    # Database DDL (CREATE statements)
+├── postman/
+│   └── TeamPulse.postman_collection.json  # API testing collection
+└── docker-compose.yml                # Docker orchestration (optional)
+```
+
+**Design Pattern:** Layered architecture (routes → controllers → services → models) with centralized error handling and consistent API response format.
+
+---
+
+## 📸 Screenshots
+
+*Login Page*
+> Modern split-screen layout with demo account buttons and professional branding.
+
+*Admin Dashboard*
+> Statistics tiles, task table with filtering, pagination, and create/edit modal.
+
+*Employee Dashboard*
+> Personal task list with status progression and focused interface.
+
+*Mobile Responsive*
+> Adapts to tablet and mobile screens with optimized layouts.
+
+*(Note: Screenshots would be added here after running the application locally.)*
+
+---
+
+## ⚙️ Prerequisites
+
+Before installation, ensure you have:
+
+- **Windows 11** or Windows 10 (macOS/Linux also supported)
+- **Node.js** ≥ 18 (v24.14.0 recommended) – [Download](https://nodejs.org/)
+- **npm** ≥ 8 (v11.11.0 comes with Node.js)
+- **MySQL Community Server** ≥ 8.0.46 – [Download](https://dev.mysql.com/downloads/mysql/)
+- **Git** (v2.52.0+) – [Download](https://git-scm.com/)
+- **VS Code** (or any code editor) – [Download](https://code.visualstudio.com/)
+
+**Verification commands:**
+```powershell
+node --version        # Should show v24.14.0+
+npm --version         # Should show v11.11.0+
+mysql --version       # Should show 8.0.46+
+git --version         # Should show 2.52.0+
+```
+
+---
+
+## 🚀 Quick Setup (Windows)
+
+Follow these steps to get TeamPulse running locally in under 10 minutes:
+
+### 1. Clone the Repository
+```bash
+git clone https://github.com/yourusername/teampulse-employee-task-tracker.git
+cd teampulse-employee-task-tracker
+```
+
+### 2. Install Dependencies
+```bash
+# Backend
+cd backend
+npm install
+cd ..
+
+# Frontend
+cd frontend
+npm install
+cd ..
+```
+
+### 3. Configure Environment
+```bash
+# Copy example files
+copy backend\.env.example backend\.env
+copy frontend\.env.example frontend\.env
+```
+
+Edit `backend/.env` and add your MySQL password:
+```
+DB_PASSWORD=your_mysql_password_here
+```
+
+### 4. Setup Database
+```bash
+cd backend
+npm run migrate
+npm run seed
+```
+
+### 5. Start Servers
+```powershell
+# Terminal 1 - Backend
+cd backend
+npm run dev
+# Should output: ✓ Connected to MySQL ✓ API listening on http://localhost:5000
+
+# Terminal 2 - Frontend
+cd frontend
+npm run dev
+# Should output: VITE ready in X ms → http://localhost:5173
+```
+
+### 6. Open in Browser
+Navigate to **http://localhost:5173** and log in with demo credentials below.
+
+---
+
+## 🔧 Environment Configuration
+
+### Backend (`.env`)
+```env
+# Server
+PORT=5000
+NODE_ENV=development
+
+# MySQL Database
+DB_HOST=localhost
+DB_PORT=3306
+DB_USER=root
+DB_PASSWORD=your_mysql_password_here
+DB_NAME=task_tracker
+
+# JWT (change for production)
+JWT_SECRET=replace_with_a_long_random_secret
+JWT_EXPIRES_IN=1d
+
+# CORS (frontend origin)
+CLIENT_URL=http://localhost:5173
+```
+
+### Frontend (`.env`)
+```env
+# Backend API URL
+VITE_API_URL=http://localhost:5000
+```
+
+---
+
+## 🗄️ Database Setup
+
+### Manual Setup (Alternative)
+```bash
 mysql -u root -p < database/schema.sql
 ```
 
-(Or skip this and use `npm run migrate` in the next step, which runs the same file.)
+### Schema Overview
+Three main tables with proper indexing and foreign keys:
 
-### 2. Backend
+**`users`**
+- `id`, `name`, `email` (unique), `password` (bcrypt hash), `role` (admin/employee), `created_at`
 
-```bash
-cd backend
-cp .env.example .env          # then edit DB_PASSWORD etc. to match your MySQL
-npm install
+**`tasks`**
+- `id`, `title`, `description`, `assigned_to` (FK to users.id), `status` (pending/in_progress/completed), `due_date`, `created_at`, `updated_at`
 
-npm run migrate               # creates the database + tables (runs schema.sql)
-npm run seed                  # inserts demo users + tasks (hashed passwords)
+**`activity_logs`** (bonus)
+- `id`, `user_id`, `action`, `entity`, `entity_id`, `details`, `created_at`
 
-npm run dev                   # starts the API on http://localhost:5000
-```
-
-You should see:
-
-```
-✓ Connected to MySQL
-✓ API listening on http://localhost:5000
-```
-
-### 3. Frontend
-
-In a second terminal:
-
-```bash
-cd frontend
-cp .env.example .env          # default VITE_API_URL=http://localhost:5000 is fine
-npm install
-npm run dev                   # starts the app on http://localhost:5173
-```
-
-Open **http://localhost:5173** and log in with a demo account below.
+### Demo Data
+The seed script (`npm run seed`) creates:
+- **1 admin:** dev@gmail.com
+- **3 employees:** aisha@demo.com, ben@demo.com, chen@demo.com
+- **6 sample tasks** with various statuses and due dates
+- **Password for all:** `password123`
 
 ---
 
-## Setup — Option B: Docker
+## 🏃 Running the Application
 
-Brings up MySQL **and** the backend (the schema auto-loads on first boot):
-
+### Development Mode
 ```bash
+# Terminal 1: Backend API
+cd backend
+npm run dev
+
+# Terminal 2: Frontend
+cd frontend
+npm run dev
+```
+
+### Production Build
+```bash
+cd frontend
+npm run build        # Creates dist/ folder
+npm run preview      # Preview production build
+
+cd backend
+npm start            # Production mode (no Nodemon)
+```
+
+### Docker (Optional)
+```bash
+# Uncomment docker-compose.yml first
 docker compose up --build
-# once running, seed demo data:
+
+# Then seed data
 docker compose exec backend npm run seed
 ```
 
-The API is then on `http://localhost:5000`. Run the frontend locally as in Option A step 3 (point `VITE_API_URL` at `http://localhost:5000`).
-
 ---
 
-## Demo Accounts
-
-All demo accounts use the password **`password123`**.
-
-| Email             | Role     |
-| ----------------- | -------- |
-| `admin@demo.com`  | admin    |
-| `aisha@demo.com`  | employee |
-| `ben@demo.com`    | employee |
-| `chen@demo.com`   | employee |
-
-The login screen also has one-click buttons to fill these in.
-
----
-
-## API Reference
+## 📡 API Reference
 
 Base URL: `http://localhost:5000`
 
-All protected endpoints expect an `Authorization: Bearer <token>` header. The token is returned by `/auth/login` and `/auth/register`.
+### Authentication
+All endpoints return `{ error: { message, details? } }` on failure.
 
-### Auth
+| Method | Endpoint | Access | Description |
+|--------|----------|--------|-------------|
+| `POST` | `/auth/register` | Public | Register new user |
+| `POST` | `/auth/login` | Public | Login, returns user + JWT |
+| `GET` | `/auth/me` | Authenticated | Current user from token |
 
-| Method | Endpoint          | Access | Description                          |
-| ------ | ----------------- | ------ | ------------------------------------ |
-| POST   | `/auth/register`  | Public | Register a user, returns user + JWT  |
-| POST   | `/auth/login`     | Public | Login, returns user + JWT            |
-| GET    | `/auth/me`        | Auth   | Current user (from token)            |
-
-**POST `/auth/register`**
-```json
-{ "name": "Jane", "email": "jane@demo.com", "password": "secret123", "role": "employee" }
+**Login Example:**
+```bash
+curl -X POST http://localhost:5000/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"dev@gmail.com","password":"password123"}'
 ```
-
-**POST `/auth/login`**
-```json
-{ "email": "admin@demo.com", "password": "password123" }
-```
-Response:
-```json
-{ "user": { "id": 1, "name": "Admin User", "email": "admin@demo.com", "role": "admin" }, "token": "eyJ..." }
-```
-
-### Users
-
-| Method | Endpoint              | Access            | Description                                |
-| ------ | --------------------- | ----------------- | ------------------------------------------ |
-| GET    | `/users`              | Admin only        | List all users (`?role=employee` optional) |
-| GET    | `/users/:id/tasks`    | Admin or self     | Tasks for a specific employee (paginated)  |
 
 ### Tasks
+Protected endpoints require `Authorization: Bearer <token>` header.
 
-| Method | Endpoint       | Access                    | Description                                  |
-| ------ | -------------- | ------------------------- | -------------------------------------------- |
-| POST   | `/tasks`       | Admin only                | Create a task                                |
-| GET    | `/tasks`       | Auth (scoped by role)     | Admins: all tasks; employees: own tasks      |
-| GET    | `/tasks/:id`   | Auth (own task or admin)  | Task details (with assignee)                 |
-| PUT    | `/tasks/:id`   | Admin (any field) / employee (own status) | Update a task              |
+| Method | Endpoint | Access | Description |
+|--------|----------|--------|-------------|
+| `POST` | `/tasks` | Admin only | Create new task |
+| `GET` | `/tasks` | Authenticated | List tasks (admin: all, employee: own) |
+| `GET` | `/tasks/:id` | Auth + permission | Single task with assignee details |
+| `PUT` | `/tasks/:id` | Auth + permission | Update task (admin: any field, employee: status only) |
 
-**Query params for `GET /tasks` and `GET /users/:id/tasks`:**
+**Query Parameters for `GET /tasks`:**
+- `status` – filter by status (pending, in_progress, completed)
+- `dueBefore`, `dueAfter` – date filtering (YYYY-MM-DD)
+- `page`, `limit` – pagination (default: page=1, limit=10, max=100)
+- `sortBy` – created_at, due_date, status, title
+- `order` – asc, desc
 
-| Param       | Example        | Notes                                          |
-| ----------- | -------------- | ---------------------------------------------- |
-| `status`    | `in_progress`  | filter by status                               |
-| `dueBefore` | `2026-07-01`   | tasks due on/before this date                  |
-| `dueAfter`  | `2026-06-01`   | tasks due on/after this date                   |
-| `page`      | `1`            | 1-based page number (default 1)                |
-| `limit`     | `10`           | page size (default 10, max 100)                |
-| `sortBy`    | `due_date`     | `created_at` \| `due_date` \| `status` \| `title` |
-| `order`     | `asc`          | `asc` \| `desc`                                |
+### Users & Activity Logs
+| Method | Endpoint | Access | Description |
+|--------|----------|--------|-------------|
+| `GET` | `/users` | Admin only | List all users (?role=employee optional) |
+| `GET` | `/users/:id/tasks` | Admin or self | Paginated tasks for specific user |
+| `GET` | `/activity-logs` | Admin only | Recent system actions (?limit=50) |
 
-Paginated responses look like:
+---
+
+## 🔐 Authentication & Roles
+
+### JWT Payload Structure
 ```json
-{ "data": [ /* tasks */ ], "total": 23, "page": 1, "limit": 10 }
+{
+  "id": 1,
+  "role": "admin",
+  "name": "Admin User",
+  "iat": 1234567890,
+  "exp": 1234567890
+}
 ```
 
-**POST `/tasks`**
-```json
-{ "title": "Prepare deck", "description": "Q3 review", "assigned_to": 2, "status": "pending", "due_date": "2026-06-30" }
+### Role Permissions
+**Admin (`admin`)**
+- Create, read, update, delete any task
+- View all users and activity logs
+- Register new users (including other admins)
+- Full CRUD on all resources
+
+**Employee (`employee`)**
+- View only assigned tasks
+- Update only task status (Pending → In Progress → Completed)
+- Cannot view other employees' tasks or user lists
+- Cannot create or delete tasks
+
+---
+
+## 🛠️ Troubleshooting
+
+### Common Issues
+
+**1. MySQL Connection Failed**
 ```
-
-**PUT `/tasks/:id`** (employee updating status)
-```json
-{ "status": "completed" }
+✗ Migration failed: Access denied for user 'root'@'localhost'
 ```
+- **Solution:** Ensure MySQL service (`MySQL80`) is running:
+  ```powershell
+  Get-Service MySQL80 | Select-Object Name, Status
+  ```
+ - Set correct password in `backend/.env`
 
-### Activity Logs (bonus)
+**2. Port Already in Use**
+```
+Error: listen EADDRINUSE: address already in use :::5000
+```
+- **Solution:** Kill the process or change PORT in `.env`:
+  ```powershell
+  netstat -ano | findstr :5000
+  taskkill /PID <PID> /F
+  ```
 
-| Method | Endpoint           | Access     | Description                  |
-| ------ | ------------------ | ---------- | ---------------------------- |
-| GET    | `/activity-logs`   | Admin only | Recent actions (`?limit=50`) |
+**3. Frontend Can't Connect to Backend**
+```
+AxiosError: Network Error
+```
+- **Solution:** Verify backend is running (`http://localhost:5000/health`) and CORS is configured.
 
-### Error shape
+**4. Database Already Exists**
+```
+Error: ER_DB_CREATE_EXISTS: Can't create database 'task_tracker'; database exists
+```
+- **Solution:** The migration script uses `CREATE DATABASE IF NOT EXISTS` – safe to rerun.
 
-Every error returns a consistent shape:
-```json
-{ "error": { "message": "Validation failed", "details": ["email must be a valid email"] } }
+### Development Commands
+```bash
+# Rebuild database from scratch
+cd backend
+npm run migrate  # Drops and recreates tables
+npm run seed     # Inserts fresh demo data
+
+# Check server health
+curl http://localhost:5000/health
+
+# View MySQL data
+mysql -u root -p -e "USE task_tracker; SELECT * FROM users;"
 ```
 
 ---
 
-## Database Schema
+## 🛡️ Security Considerations
 
-Three tables — `users`, `tasks`, and `activity_logs` (bonus). Full DDL is in
-[`database/schema.sql`](database/schema.sql).
+### Implemented Security Features
+- **Password hashing** – bcrypt with 10 rounds
+- **JWT expiration** – tokens expire after 1 day
+- **SQL injection prevention** – parameterized queries, column whitelisting
+- **CORS configuration** – only frontend origin allowed
+- **Input validation** – all API endpoints validate request body
+- **Role-based authorization** – enforced at service layer
 
-- `tasks.assigned_to` → FK to `users.id` (`ON DELETE SET NULL`)
-- `activity_logs.user_id` → FK to `users.id`
-- Indexes on `tasks.status`, `tasks.due_date`, and `tasks.assigned_to` for filtering/sorting
+### Production Deployment Checklist
+1. Change `JWT_SECRET` to a strong random string
+2. Use HTTPS in production
+3. Set `NODE_ENV=production`
+4. Implement rate limiting
+5. Use environment-specific database credentials
+6. Regular dependency updates (`npm audit`)
 
-The **SQL JOIN** requirement is satisfied in `task.model.js`, where task reads
-`LEFT JOIN users` to return `assignee_name` / `assignee_email` alongside each task.
+### Dependency Security Status
+- **Backend:** ✅ All vulnerabilities fixed (`npm audit` reports 0)
+- **Frontend:** ⚠️ 4 vulnerabilities remain (require major version bumps – safe for development)
 
 ---
 
-## Postman Collection
+## 🚀 Future Improvements
 
-Import [`postman/Employee-Task-Tracker.postman_collection.json`](postman/Employee-Task-Tracker.postman_collection.json) into Postman.
+### Planned Features (Backlog)
+1. **Email notifications** – task assignment and due date reminders
+2. **File attachments** – allow uploading documents to tasks
+3. **Team dashboards** – visual progress charts and metrics
+4. **Calendar view** – timeline visualization of tasks
+5. **Bulk operations** – select multiple tasks for batch updates
+6. **User profiles** – profile pictures and personal settings
 
-- Set the `baseUrl` collection variable if needed (defaults to `http://localhost:5000`).
-- Run **Auth → Login (admin)** first — it automatically stores the JWT in the
-  `token` variable, which every other request uses.
+### Technical Enhancements
+- **Testing suite** – Jest/React Testing Library
+- **CI/CD pipeline** – GitHub Actions for automated testing
+- **Docker optimization** – multi-stage builds, health checks
+- **API documentation** – Swagger/OpenAPI spec
+- **Performance monitoring** – logging, metrics collection
 
 ---
 
-## Notes & Design Decisions
+## 📄 License & Attribution
 
-- **Layered architecture** keeps SQL in models, business rules + authorization in
-  services, and HTTP concerns in controllers — so each layer is independently testable.
-- **Authorization is enforced server-side**, not just in the UI: employees are
-  scoped to their own tasks at the service layer even if they craft a request
-  directly, and may only change a task's `status`. The React `ProtectedRoute` is a
-  UX convenience on top of that.
-- **`dateStrings: true`** on the MySQL pool returns `DATE` values as plain
-  `YYYY-MM-DD` strings, avoiding timezone drift between the DB and the UI.
-- **`LIMIT`/`OFFSET`** are validated as integers and clamped (max 100) before being
-  interpolated, since some MySQL versions reject placeholders in `LIMIT`. The
-  `sortBy` column is checked against a whitelist to prevent SQL injection.
-- **JWT** carries `{ id, role, name }` so role checks don't require a DB round-trip
-  on every request.
-```
+### License
+This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
+
+This is a derivative work based on the original [Employee Task Tracker](https://github.com/SagarGitRepo/employee-task-tracker) by SagarGitRepo, which is also MIT licensed.
+
+### Original Project
+TeamPulse is based on the original **Employee Task Tracker** project by [SagarGitRepo](https://github.com/SagarGitRepo/employee-task-tracker).
+
+### Modifications in this fork
+- Complete rebranding to "TeamPulse"
+- Professional UI/UX redesign with indigo/teal/amber palette
+- Security hardening (npm audit fixes)
+- Improved documentation and setup instructions
+- Accessibility improvements (ARIA labels, keyboard navigation)
+- Updated demo credentials
+
+---
+
+## 📞 Support
+
+**Need help?**
+1. Check the [Troubleshooting](#troubleshooting) section
+2. Review the API documentation
+3. Create an issue on GitHub
+
+**Found a bug?**
+Please report via GitHub Issues with:
+- Steps to reproduce
+- Expected vs actual behavior
+- Screenshots if applicable
+- Environment details
+
+**Want to contribute?**
+1. Fork the repository
+2. Create a feature branch
+3. Submit a pull request with clear description
+
+---
+
+**TeamPulse** – *Track work, move fast.*

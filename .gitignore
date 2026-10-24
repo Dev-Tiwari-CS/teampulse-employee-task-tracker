@@ -3,4 +3,5 @@ dist/
 .env
 *.log
 .DS_Store
-.enc.example
+.env.example.local
+Thumbs.db

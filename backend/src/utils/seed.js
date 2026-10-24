@@ -27,7 +27,7 @@ async function seed() {
     await conn.query('SET FOREIGN_KEY_CHECKS = 1');
 
     const users = [
-      ['Admin User', 'admin@demo.com', hash, 'admin'],
+      ['Admin User', 'dev@gmail.com', hash, 'admin'],
       ['Aisha Khan', 'aisha@demo.com', hash, 'employee'],
       ['Ben Carter', 'ben@demo.com', hash, 'employee'],
       ['Chen Wei', 'chen@demo.com', hash, 'employee'],
@@ -63,7 +63,7 @@ async function seed() {
 
     console.log('✓ Seed complete');
     console.log('\nDemo accounts (password for all: %s):', DEMO_PASSWORD);
-    console.log('  admin@demo.com   (admin)');
+    console.log('  dev@gmail.com    (admin)');
     console.log('  aisha@demo.com   (employee)');
     console.log('  ben@demo.com     (employee)');
     console.log('  chen@demo.com    (employee)');

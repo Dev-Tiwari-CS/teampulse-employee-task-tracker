@@ -18,12 +18,10 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // Filters (bonus).
   const [statusFilter, setStatusFilter] = useState('');
   const [dueBefore, setDueBefore] = useState('');
   const [sortBy, setSortBy] = useState('created_at');
 
-  // Modal state.
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState(null);
 
@@ -48,7 +46,6 @@ export default function AdminDashboard() {
     }
   }, [statusFilter, dueBefore, sortBy, page]);
 
-  // Load employees once.
   useEffect(() => {
     userApi
       .list('employee')
@@ -56,18 +53,10 @@ export default function AdminDashboard() {
       .catch((err) => setError(err.message));
   }, []);
 
-  // Reset to page 1 whenever a filter changes.
-  useEffect(() => {
-    setPage(1);
-  }, [statusFilter, dueBefore, sortBy]);
-
-  useEffect(() => {
-    loadTasks();
-  }, [loadTasks]);
+  useEffect(() => { setPage(1); }, [statusFilter, dueBefore, sortBy]);
+  useEffect(() => { loadTasks(); }, [loadTasks]);
 
   const stats = useMemo(() => {
-    // These reflect the current (filtered) page-set total via separate count;
-    // for headline numbers we approximate from loaded tasks + total.
     const byStatus = tasks.reduce((acc, t) => {
       acc[t.status] = (acc[t.status] || 0) + 1;
       return acc;
@@ -75,27 +64,27 @@ export default function AdminDashboard() {
     return { byStatus };
   }, [tasks]);
 
-  function openCreate() {
-    setEditing(null);
-    setModalOpen(true);
-  }
-  function openEdit(task) {
-    setEditing(task);
-    setModalOpen(true);
-  }
+  function openCreate() { setEditing(null); setModalOpen(true); }
+  function openEdit(task) { setEditing(task); setModalOpen(true); }
 
   async function handleSubmit(payload) {
-    if (editing) {
-      await taskApi.update(editing.id, payload);
-      push('Task updated');
-    } else {
-      await taskApi.create(payload);
-      push('Task created');
+    try {
+      if (editing) {
+        await taskApi.update(editing.id, payload);
+        push('Task updated successfully');
+      } else {
+        await taskApi.create(payload);
+        push('Task created successfully');
+      }
+      setModalOpen(false);
+      setEditing(null);
+      loadTasks();
+    } catch (err) {
+      throw err; // let the modal display the error
     }
-    setModalOpen(false);
-    setEditing(null);
-    loadTasks();
   }
+
+  const hasFilters = statusFilter || dueBefore;
 
   return (
     <>
@@ -104,46 +93,61 @@ export default function AdminDashboard() {
         <header className="page-head">
           <div>
             <h1>Admin Dashboard</h1>
-            <p className="lede">Manage your team and assign work.</p>
+            <p className="lede">Manage your team, assign tasks, and track progress.</p>
           </div>
-          <button className="btn btn-primary" onClick={openCreate}>
+          <button className="btn btn-primary" onClick={openCreate} aria-label="Create new task">
             + New Task
           </button>
         </header>
 
-        {error && <div className="error-banner">{error}</div>}
+        {error && (
+          <div className="error-banner" role="alert">
+            <span aria-hidden="true">⚠</span> {error}
+          </div>
+        )}
 
         {/* Stat tiles */}
-        <div className="stats">
+        <div className="stats" role="region" aria-label="Summary statistics">
           <div className="card stat">
-            <div className="n">{employees.length}</div>
-            <div className="l">Employees</div>
-            <div className="bar"><i style={{ width: '100%' }} /></div>
+            <div className="stat-value">{employees.length}</div>
+            <div className="stat-label">Team members</div>
+            <div className="stat-bar"><span className="stat-bar-fill" style={{ width: '100%' }} /></div>
           </div>
           <div className="card stat">
-            <div className="n">{total}</div>
-            <div className="l">Total tasks</div>
-            <div className="bar"><i style={{ width: '100%' }} /></div>
+            <div className="stat-value">{total}</div>
+            <div className="stat-label">Total tasks</div>
+            <div className="stat-bar"><span className="stat-bar-fill" style={{ width: '100%' }} /></div>
           </div>
           <div className="card stat">
-            <div className="n">{stats.byStatus.in_progress || 0}</div>
-            <div className="l">In progress (this page)</div>
-            <div className="bar"><i style={{ width: '60%' }} /></div>
+            <div className="stat-value">{stats.byStatus.in_progress || 0}</div>
+            <div className="stat-label">In progress <span className="muted">(this page)</span></div>
+            <div className="stat-bar">
+              <span className="stat-bar-fill" style={{ width: total ? `${Math.round(((stats.byStatus.in_progress||0)/tasks.length)*100)||0}%` : '0%' }} />
+            </div>
           </div>
           <div className="card stat">
-            <div className="n">{stats.byStatus.completed || 0}</div>
-            <div className="l">Completed (this page)</div>
-            <div className="bar"><i style={{ width: '40%' }} /></div>
+            <div className="stat-value">{stats.byStatus.completed || 0}</div>
+            <div className="stat-label">Completed <span className="muted">(this page)</span></div>
+            <div className="stat-bar">
+              <span className="stat-bar-fill" style={{ width: tasks.length ? `${Math.round(((stats.byStatus.completed||0)/tasks.length)*100)||0}%` : '0%' }} />
+            </div>
           </div>
         </div>
 
-        {/* Filters */}
+        {/* Tasks panel */}
         <div className="card card-pad">
-          <div className="section-title">All Tasks</div>
-          <div className="filters">
+          <div className="section-label">All Tasks</div>
+
+          {/* Filters */}
+          <div className="filters" role="search" aria-label="Filter tasks">
             <div className="field">
-              <label>Status</label>
-              <select className="select" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+              <label htmlFor="filter-status">Status</label>
+              <select
+                id="filter-status"
+                className="select"
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+              >
                 <option value="">All statuses</option>
                 <option value="pending">Pending</option>
                 <option value="in_progress">In Progress</option>
@@ -151,40 +155,50 @@ export default function AdminDashboard() {
               </select>
             </div>
             <div className="field">
-              <label>Due before</label>
-              <input type="date" className="input" value={dueBefore} onChange={(e) => setDueBefore(e.target.value)} />
+              <label htmlFor="filter-due">Due before</label>
+              <input
+                id="filter-due"
+                type="date"
+                className="input"
+                value={dueBefore}
+                onChange={(e) => setDueBefore(e.target.value)}
+              />
             </div>
             <div className="field">
-              <label>Sort by</label>
-              <select className="select" value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
-                <option value="created_at">Newest</option>
+              <label htmlFor="filter-sort">Sort by</label>
+              <select
+                id="filter-sort"
+                className="select"
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+              >
+                <option value="created_at">Newest first</option>
                 <option value="due_date">Due date</option>
                 <option value="status">Status</option>
-                <option value="title">Title</option>
+                <option value="title">Title A–Z</option>
               </select>
             </div>
-            {(statusFilter || dueBefore) && (
+            {hasFilters && (
               <button
                 className="btn btn-sm"
-                onClick={() => {
-                  setStatusFilter('');
-                  setDueBefore('');
-                }}
+                onClick={() => { setStatusFilter(''); setDueBefore(''); }}
+                aria-label="Clear all filters"
               >
                 Clear filters
               </button>
             )}
           </div>
 
+          {/* Table */}
           <div className="table-wrap">
-            <table className="tasks">
+            <table className="tasks" aria-label="Tasks table">
               <thead>
                 <tr>
-                  <th>Task</th>
-                  <th>Assigned to</th>
-                  <th>Status</th>
-                  <th>Due date</th>
-                  <th className="right">Action</th>
+                  <th scope="col">Task</th>
+                  <th scope="col">Assigned to</th>
+                  <th scope="col">Status</th>
+                  <th scope="col">Due date</th>
+                  <th scope="col" className="right">Action</th>
                 </tr>
               </thead>
               <tbody>
@@ -192,7 +206,8 @@ export default function AdminDashboard() {
                   <tr>
                     <td colSpan={5}>
                       <div className="center-screen" style={{ height: 120 }}>
-                        <span className="spinner" /> Loading tasks…
+                        <span className="spinner" aria-hidden="true" />
+                        <span>Loading tasks…</span>
                       </div>
                     </td>
                   </tr>
@@ -200,8 +215,11 @@ export default function AdminDashboard() {
                   <tr>
                     <td colSpan={5}>
                       <div className="empty">
-                        <div className="big">No tasks found</div>
-                        <div>Try adjusting filters or create a new task.</div>
+                        <div className="empty-icon" aria-hidden="true">📋</div>
+                        <div className="empty-title">No tasks found</div>
+                        <div className="empty-sub">
+                          {hasFilters ? 'Try adjusting your filters.' : 'Create a new task to get started.'}
+                        </div>
                       </div>
                     </td>
                   </tr>
@@ -210,13 +228,21 @@ export default function AdminDashboard() {
                     <tr key={t.id}>
                       <td>
                         <div className="task-title">{t.title}</div>
-                        {t.description && <div className="task-desc">{t.description}</div>}
+                        {t.description && (
+                          <div className="task-desc">{t.description}</div>
+                        )}
                       </td>
-                      <td>{t.assignee_name || <span className="muted">Unassigned</span>}</td>
+                      <td>
+                        {t.assignee_name || <span className="muted">Unassigned</span>}
+                      </td>
                       <td><StatusBadge status={t.status} /></td>
                       <td>{t.due_date || <span className="muted">—</span>}</td>
                       <td className="right">
-                        <button className="btn btn-sm" onClick={() => openEdit(t)}>
+                        <button
+                          className="btn btn-sm"
+                          onClick={() => openEdit(t)}
+                          aria-label={`Edit task: ${t.title}`}
+                        >
                           Edit
                         </button>
                       </td>
@@ -235,10 +261,7 @@ export default function AdminDashboard() {
         <TaskModal
           task={editing}
           employees={employees}
-          onClose={() => {
-            setModalOpen(false);
-            setEditing(null);
-          }}
+          onClose={() => { setModalOpen(false); setEditing(null); }}
           onSubmit={handleSubmit}
         />
       )}

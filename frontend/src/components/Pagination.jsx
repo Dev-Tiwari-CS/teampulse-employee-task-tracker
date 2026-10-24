@@ -4,8 +4,8 @@ export default function Pagination({ page, limit, total, onChange }) {
   const to = Math.min(page * limit, total);
 
   return (
-    <div className="pager">
-      <span>
+    <nav className="pager" aria-label="Pagination">
+      <span aria-live="polite" aria-atomic="true">
         {total === 0 ? 'No results' : `Showing ${from}–${to} of ${total}`}
       </span>
       <div className="controls">
@@ -13,20 +13,22 @@ export default function Pagination({ page, limit, total, onChange }) {
           className="btn btn-sm"
           disabled={page <= 1}
           onClick={() => onChange(page - 1)}
+          aria-label="Previous page"
         >
           ← Prev
         </button>
-        <span className="muted">
+        <span className="muted" aria-current="page">
           Page {page} / {totalPages}
         </span>
         <button
           className="btn btn-sm"
           disabled={page >= totalPages}
           onClick={() => onChange(page + 1)}
+          aria-label="Next page"
         >
           Next →
         </button>
       </div>
-    </div>
+    </nav>
   );
 }
