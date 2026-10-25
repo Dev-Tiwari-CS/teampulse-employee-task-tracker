@@ -5,10 +5,11 @@
   "main": "src/server.js",
   "type": "commonjs",
   "scripts": {
-    "start": "node src/server.js",
-    "dev": "nodemon src/server.js",
-    "migrate": "node src/utils/migrate.js",
-    "seed": "node src/utils/seed.js"
+    "start":           "node src/server.js",
+    "dev":             "nodemon src/server.js",
+    "migrate":         "node src/utils/migrate.js",
+    "migrate:hosted":  "node src/utils/migrate-hosted.js",
+    "seed":            "node src/utils/seed.js"
   },
   "keywords": ["express", "mysql", "jwt", "task-tracker"],
   "license": "MIT",
